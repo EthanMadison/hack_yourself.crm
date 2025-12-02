@@ -11,6 +11,6 @@ __pycache__/
 
 # База данных
 *.db
-database/
+
 # Логи
 *.log
