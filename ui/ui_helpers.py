@@ -2,6 +2,19 @@ import tkinter as tk
 from tkinter import ttk
 
 def ask_yes_no(parent: tk.Misc, title: str, message: str) -> bool:
+    """
+    Показывает модальное окно подтверждения с кнопками «Да» и «Отмена».
+    Диалог делает окно модальным (grab_set), привязывает Enter к действию «Да»,
+    Esc — к «Отмена» и возвращает выбор пользователя в виде булева значения.
+
+    Аргументы:
+        parent: Родительский виджет/окно;
+        title: Заголовок диалогового окна;
+        message: Текст сообщения внутри диалога.
+
+    Returns:
+        bool: 'True', если пользователь нажал «Да», иначе 'False'.
+    """
     win = tk.Toplevel(parent)
     win.title(title)
     win.transient(parent)
