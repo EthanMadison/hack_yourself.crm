@@ -19,11 +19,12 @@ FIELD_LABELS = {
 def format_phone(phone_number: Optional[str]) -> str:
     """
     Возвращает красиво отформатированное представление телефона для UI.
+    Пример: для номеров вида '+7XXXXXXXXXX' вернёт '+7 (XXX) XXX-XX-XX'.
 
-    Пример: для номеров вида `+7XXXXXXXXXX` вернёт `+7 (XXX) XXX-XX-XX`.
-
-    :param phone_number: Нормализованный телефон (или произвольная строка);
-    :return: Строка для отображения.
+    Аргументы:
+        phone_number: Нормализованный телефон (или произвольная строка).
+    Возвращает:
+        Строка для отображения.
     """
     if not phone_number:
         return ''
@@ -36,8 +37,7 @@ def format_phone(phone_number: Optional[str]) -> str:
 class ContactDialog(simpledialog.Dialog):
     """
     Модальное окно создания/редактирования контакта.
-
-    Возвращает результат в свойстве `result` (dict) после успешной валидации.
+    Возвращает результат в свойстве 'result' (dict) после успешной валидации.
     """
 
     def __init__(self, parent: tk.Misc, title: str, initial: Optional[Dict]=None) -> None:
@@ -50,8 +50,10 @@ class ContactDialog(simpledialog.Dialog):
         """
         Строит форму и настраивает live-валидацию полей.
 
-        :param master: Родительский контейнер диалога;
-        :return: Виджет, получающий фокус при открытии (поле имени).
+        Аргументы:
+            master: Родительский контейнер диалога.
+        Возвращает:
+            Виджет, получающий фокус при открытии (поле имени).
         """
         fields: List[str] = ['name', 'email', 'phone', 'company', 'tags', 'notes']
         self.inputs: Dict[str, ttk.Entry] = {}
@@ -83,23 +85,25 @@ class ContactDialog(simpledialog.Dialog):
     def validate(self) -> bool:
         """Проверяет корректность данных при нажатии "ОК".
 
-        :return: ``True`` — закрыть окно; ``False`` — оставить открытым
+        Возвращает:
+            'True' — закрыть окно; 'False' — оставить открытым.
         """
         name = self.inputs['name'].get().strip()
         email = self.inputs['email'].get().strip()
         if not name:
-            messagebox.showwarning('Валидация', 'Имя обязательно.')
+            messagebox.showwarning('Валидация', 'Ошибка. Поле "ФИО" обязательно для заполнения.')
             return False
         if not NAME_ALLOWED.fullmatch(name):
-            messagebox.showwarning('Валидация', 'Имя может содержать только буквы, пробел, дефис и апостроф.')
+            messagebox.showwarning('Валидация', 'Ошибка. Поле "ФИО" должно содержать только буквы,'
+                                                ' пробелы, дефис или апостроф.')
             return False
         if email and ('@' not in email or email.startswith('@') or email.endswith('@')):
-            messagebox.showwarning('Валидация', "Email должен содержать символ '@'.")
+            messagebox.showwarning('Валидация', "Ошибка. Проверьте корректность введённого email.")
             return False
         return True
 
     def apply(self) -> None:
-        """Сохраняет значения полей из формы в ``self.result``."""
+        """Сохраняет значения полей из формы в 'self.result'."""
         self.result = {k: w.get().strip() for k, w in self.inputs.items()}
 
     def buttonbox(self):
@@ -121,13 +125,15 @@ class ContactDialog(simpledialog.Dialog):
 class MainWindow(ttk.Frame):
     """Главное окно приложения: поиск, действия и таблица контактов."""
 
-    def __init__(self, master: tk.Misc, on_add: Callable[[], None], on_edit: Callable[[Optional[int]], None], on_del: Callable[[Optional[int]], None], on_search: Callable[[str], None], on_import: Callable[[], None], on_export: Callable[[], None]) -> None:
-        '''"""
-__init__ — опишите назначение функции в одном-двух предложениях.
-
-:param self: ...\\n:param master: ...\\n:param on_add: ...\\n:param on_edit: ...\\n:param on_del: ...\\n:param on_search: ...\\n:param on_import: ...\\n:param on_export: ...
-:return: ...
-"""'''
+    def __init__(self,
+                 master: tk.Misc,
+                 on_add: Callable[[], None],
+                 on_edit: Callable[[Optional[int]], None],
+                 on_del: Callable[[Optional[int]], None],
+                 on_search: Callable[[str], None],
+                 on_import: Callable[[], None],
+                 on_export: Callable[[], None]
+                 ) -> None:
         super().__init__(master)
         self.on_add, self.on_edit, self.on_del = (on_add, on_edit, on_del)
         self.on_search, self.on_import, self.on_export = (on_search, on_import, on_export)
@@ -141,9 +147,9 @@ __init__ — опишите назначение функции в одном-д
         btns = ttk.Frame(self)
         btns.pack(fill='x', pady=6)
         ttk.Button(btns, text='Добавить', command=self._add).pack(side='left')
-        ttk.Button(btns, text='Изменить', command=self._edit).pack(side='left', padx=5)
+        ttk.Button(btns, text='Изменить', command=self._edit).pack(side='left', padx=1)
         ttk.Button(btns, text='Удалить', command=self._del).pack(side='left')
-        ttk.Button(btns, text='Экспорт CSV', command=self.on_export).pack(side='right', padx=5)
+        ttk.Button(btns, text='Экспорт CSV', command=self.on_export).pack(side='right', padx=0)
         ttk.Button(btns, text='Импорт CSV', command=self.on_import).pack(side='right')
         self.tree = ttk.Treeview(self, columns=('name', 'email', 'phone', 'company', 'tags', 'notes'),
                                  show='headings', selectmode="extended")
@@ -155,65 +161,42 @@ __init__ — опишите назначение функции в одном-д
     def set_rows(self, rows: List[Dict]) -> None:
         """Полностью перерисовывает содержимое таблицы по списку записей.
 
-        :param rows: Список словарей, как возвращает ``db.list_contacts``
+        Аргументы:
+            rows: Список словарей, как возвращает 'db.list_contacts'.
         """
         self.tree.delete(*self.tree.get_children())
         for r in rows:
-            self.tree.insert('', 'end', iid=str(r['id']), values=(r['name'], r.get('email'), format_phone(r.get('phone')), r.get('company'), r.get('tags'), r.get('notes')))
+            self.tree.insert('', 'end', iid=str(r['id']), values=(r['name'], r.get('email'),
+                                                                  format_phone(r.get('phone')), r.get('company'),
+                                                                  r.get('tags'), r.get('notes')))
 
     def selected_id(self) -> Optional[int]:
-        """Возвращает ``id`` выделенной строки или ``None``.
-        """
+        """Возвращает 'id' выделенной строки или 'None'."""
         sel = self.tree.selection()
         return int(sel[0]) if sel else None
 
-    def selected_ids(self):
+    def selected_ids(self) -> list[int] | None:
         """Возвращает список ID всех выделенных строк (может быть пустым)."""
-        sels = self.tree.selection()  # кортеж iids (строковые)
-        return [int(s) for s in sels] if sels else []
+        selected_id = self.tree.selection()  # кортеж iids (строковые)
+        return [int(s) for s in selected_id] if selected_id else []
 
     def _add(self) -> None:
-        '''"""
-_add — опишите назначение функции в одном-двух предложениях.
-
-:param self: ...
-:return: ...
-"""'''
+        """Открывает диалог добавления и передаёт управление обработчику 'on_add'."""
         self.on_add()
 
     def _edit(self) -> None:
-        '''"""
-_edit — опишите назначение функции в одном-двух предложениях.
-
-:param self: ...
-:return: ...
-"""'''
+        """Запускает обработчик 'on_edit' для текущей выделенной записи."""
         self.on_edit(self.selected_id())
 
     def _del(self) -> None:
-        '''"""
-_del — опишите назначение функции в одном-двух предложениях.
-
-:param self: ...
-:return: ...
-"""'''
+        """Удаляет выбранные записи, передавая их ID(ы) обработчику 'on_del'."""
         self.on_del(self.selected_ids())
 
     def _search(self) -> None:
-        '''"""
-_search — опишите назначение функции в одном-двух предложениях.
-
-:param self: ...
-:return: ...
-"""'''
+        """Передаёт текущую строку поиска обработчику 'on_search'."""
         self.on_search(self.q.get().strip())
 
     def _reset(self) -> None:
-        '''"""
-_reset — опишите назначение функции в одном-двух предложениях.
-
-:param self: ...
-:return: ...
-"""'''
+        """Очищает строку поиска и сбрасывает фильтр (показывает все записи)."""
         self.q.set('')
         self.on_search('')

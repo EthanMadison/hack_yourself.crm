@@ -13,12 +13,11 @@ PHONE_ALLOWED = re.compile('^[0-9+()\\- ]+$')
 def validate_name_or_raise(name: str) -> None:
     """
     Функция для проверки корректности введённого имени.
-
     Допускаются только буквы (латиница/кириллица), пробел, дефис и апостроф.
-    Выбрасывает исключение class:`ValueError`, если имя некорректно.
+    Выбрасывает исключение class: 'ValueError', если имя некорректно.
 
-    :param name: Имя контакта (обязательное поле);
-    :raises ValueError: Исключение, если имя пустое или содержит недопустимые символы.
+    Аргументы:
+        name: Имя контакта (обязательное поле).
     """
     if not name or not NAME_ALLOWED.fullmatch(name.strip()):
         raise ValueError('Ошибка. Имя должно содержать только буквы, пробелы, дефис или апостроф.')
@@ -26,12 +25,11 @@ def validate_name_or_raise(name: str) -> None:
 def validate_email_or_raise(email: Optional[str]) -> None:
     """
     Функция для минимальной проверки email на наличие символа `@`.
-
     Допускается пустое значение. Считает некорректными варианты,
     где символ `@` отсутствует или стоит первым/последним символом.
 
-    :param email: Email или `None`;
-    :raises ValueError: Исключение при нарушении простого правила наличия символа `@`.
+    Аргументы:
+        email: Email или `None`.
     """
     if not email:
         return
@@ -42,20 +40,21 @@ def validate_email_or_raise(email: Optional[str]) -> None:
 def validate_phone_or_raise(phone: Optional[str]) -> None:
     """
     Проверяет допустимость символов телефонного номера.
-
     Разрешенные символы: цифры, пробел, +, (), -.
 
-    :param phone: Номер телефона или `None`;
-    :raises ValueError: Исключение, если номер содержит недопустимые символы.
+    Аргументы:
+        phone: Номер телефона или 'None'.
     """
     if phone and (not PHONE_ALLOWED.fullmatch(phone)):
         raise ValueError('Ошибка. Телефон содержит недопустимые символы.')
 
 def normalize_phone(source_phone: Optional[str]) -> str:
-    """Нормализует номер для хранения — оставляет только цифры и ведущий `+`.
+    """Нормализует номер для хранения — оставляет только цифры и ведущий '+'.
 
-    :param source_phone: Исходный ввод пользователя;
-    :return: Нормализованный номер (например, `+79991234567`)
+    Аргументы:
+        source_phone: Исходный ввод пользователя.
+    Возвращает:
+        Нормализованный номер (например, '+79991234567')
     """
     return re.sub('[^\\d+]', '', source_phone or '')
 
@@ -63,7 +62,8 @@ def get_connect() -> sqlite3.Connection:
     """
     Создаёт соединение с базой данных SQLite и включает получение строк как словарей.
 
-    :return: Объект соединения `sqlite3.Connection`.
+    Возвращает:
+        Объект соединения 'sqlite3.Connection'.
     """
     connect = sqlite3.connect(DB_PATH)
     connect.row_factory = sqlite3.Row
@@ -71,8 +71,8 @@ def get_connect() -> sqlite3.Connection:
 
 def init_db() -> None:
     """
-    Создаёт таблицу `contacts` при первом запуске.
-    Столбец `created_at` по умолчанию заполняется текущим временем (UTC).
+    Создаёт таблицу 'contacts' при первом запуске.
+    Столбец 'created_at' по умолчанию заполняется текущим временем (UTC).
     """
     connect = get_connect()
     try:
@@ -85,7 +85,7 @@ def init_db() -> None:
                     email TEXT,
                     phone TEXT,
                     company TEXT,
-                    ags TEXT,
+                    tags TEXT,
                     notes TEXT,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 );
@@ -97,11 +97,12 @@ def init_db() -> None:
 def list_contacts(substring_search: str='') -> List[Dict]:
     """
     Возвращает список контактов (опционально — с фильтром по подстроке).
+    Ищет совпадения в полях: 'name', 'email', 'phone', 'company', 'tags'.
 
-    Ищет совпадения в полях: `name`, `email`, `phone`, `company`, `tags`.
-
-    :param substring_search: Подстрока для поиска (если пусто — возвращает все записи);
-    :return: Список словарей, каждый — одна запись контакта.
+    Аргументы:
+        substring_search: Подстрока для поиска (если пусто — возвращает все записи).
+    Возвращает:
+        Список словарей, каждый — одна запись контакта.
     """
     sql = 'SELECT * FROM contacts'
     params = []
@@ -119,13 +120,14 @@ def list_contacts(substring_search: str='') -> List[Dict]:
 
 def add_contact(data: Dict) -> int:
     """
-    Добавляет контакт и возвращает его `id`.
-
+    Добавляет контакт и возвращает его 'id'.
     Перед записью выполняется проверка имени/email/телефона, а телефон нормализуется.
+    Исключение ValueError если валидация не пройдена.
 
-    :param data: Данные контакта (ключи: ``name``, ``email``, ``phone``, ``company``, ``tags``, ``notes``);
-    :return: `id` вставленной записи;
-    :raises ValueError: если валидация не пройдена.
+    Аргументы:
+        data: Данные контакта (ключи: 'name', 'email', 'phone', 'company', 'tags', 'notes').
+    Возвращает:
+        'id' вставленной записи.
     """
     validate_name_or_raise(data.get('name', ''))
     validate_email_or_raise(data.get('email'))
@@ -155,11 +157,12 @@ def add_contact(data: Dict) -> int:
 
 def update_contact(contact_id: int, data: Dict) -> None:
     """
-    Обновляет существующий контакт по `id`.
+    Обновляет существующий контакт по 'id'.
+    Исключение ValueError если валидация не пройдена.
 
-    :param contact_id: Идентификатор редактируемого контакта;
-    :param data: Новые значения полей;
-    :raises ValueError: Если валидация не пройдена.
+    Аргументы:
+        contact_id: Идентификатор редактируемого контакта;
+        data: Новые значения полей.
     """
     validate_name_or_raise(data.get('name', ''))
     validate_email_or_raise(data.get('email'))
@@ -188,9 +191,10 @@ def update_contact(contact_id: int, data: Dict) -> None:
 
 def delete_contact(contact_id: int) -> None:
     """
-    Удаляет контакт по `id`.
+    Удаляет контакт по 'id'.
 
-    :param contact_id: Идентификатор удаляемой записи.
+    Аргументы:
+        contact_id: Идентификатор удаляемой записи.
     """
     connect = get_connect()
     try:
@@ -203,7 +207,7 @@ def delete_contacts(contact_ids: list[int]) -> int:
     """Удаляет сразу несколько контактов по списку id. Возвращает число удалённых строк."""
     if not contact_ids:
         return 0
-    # формируем плейсхолдеры (?, ?, ?, ...)
+    # формирование плейсхолдеров (?, ?, ?, ...)
     placeholders = ",".join(["?"] * len(contact_ids))
     sql = f"DELETE FROM contacts WHERE id IN ({placeholders})"
     connect = get_connect()
@@ -218,8 +222,10 @@ def export_contacts_csv(path: str) -> int:
     """
     Экспортирует все контакты в CSV-файл.
 
-    :param path: Путь для сохранения CSV;
-    :return: Количество экспортированных записей.
+    Аргументы:
+        path: Путь для сохранения CSV.
+    Возвращает:
+        Количество экспортированных записей.
     """
     rows = list_contacts('')
     with open(path, 'w', newline='', encoding='utf-8') as csv_file:
@@ -234,13 +240,14 @@ def export_contacts_csv(path: str) -> int:
 def import_contacts_csv(path: str) -> int:
     """
     Импортирует контакты из CSV.
-
-    Ожидаемые заголовки: `name, email, phone, company, tags, notes`.
+    Ожидаемые заголовки: 'name, email, phone, company, tags, notes'.
     Пустые имена пропускаются. Телефон нормализуется.
+    Исключение ValueError если строка CSV нарушает правила валидации.
 
-    :param path: Путь к входному CSV-файлу;
-    :return: Количество добавленных записей;
-    :raises ValueError: если строка CSV нарушает правила валидации.
+    Аргументы:
+        path: Путь к входному CSV-файлу.
+    Возвращает:
+        Количество добавленных записей.
     """
     added = 0
     with open(path, 'r', newline='', encoding='utf-8') as csv_file:
